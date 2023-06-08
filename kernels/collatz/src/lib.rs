@@ -1,7 +1,5 @@
 #![cfg_attr(
     target_arch = "spirv",
-    feature(register_attr),
-    register_attr(spirv),
     no_std
 )]
 // HACK(eddyb) can't easily see warnings otherwise from `spirv-builder` builds.
@@ -10,9 +8,9 @@
 extern crate spirv_std;
 
 use glam::UVec3;
-use spirv_std::glam;
-#[cfg(not(target_arch = "spirv"))]
-use spirv_std::macros::spirv;
+use spirv_std::{glam, spirv};
+// #[cfg(not(target_arch = "spirv"))]
+// use spirv_std::macros::spirv;
 
 // Adapted from the wgpu hello-compute example
 

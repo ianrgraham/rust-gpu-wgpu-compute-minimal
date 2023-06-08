@@ -1,15 +1,2 @@
-[package]
-name = "rust-gpu-wgpu-compute-minimal"
-version = "0.1.0"
-edition = "2021"
-authors = ["Andrew Korzhuev <korzhuev@andrusha.me>"]
-description = "Minimal rust-gpu compute shader example running on WGPU backend with Vulkan support"
-keywords = ["rust-gpu", "wgpu", "compute-shader", "vulkan"]
-
-
-[dependencies]
-futures = { version = "0.3", default-features = false, features = ["std", "executor"] }
-wgpu = { git = "https://github.com/gfx-rs/wgpu", features = ["spirv", "vulkan-portability"] }
-
-[build-dependencies]
-spirv-builder = { git = "https://github.com/EmbarkStudios/rust-gpu" }
+[workspace]
+members = ["examples/*", "kernels/*"]

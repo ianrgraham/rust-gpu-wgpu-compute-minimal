@@ -4,7 +4,7 @@ use std::{convert::TryInto, num::NonZeroU64};
 use wgpu::{BufferAsyncError, Device, Queue, RequestDeviceError, ShaderModule};
 
 async fn init_device() -> Result<(Device, Queue), RequestDeviceError> {
-    let instance = wgpu::Instance::new(wgpu::Backends::PRIMARY);
+    let instance = wgpu::Instance::new(wgpu::InstanceDescriptor::default());
     let adapter = instance
         .request_adapter(&wgpu::RequestAdapterOptions {
             power_preference: wgpu::PowerPreference::default(),
@@ -105,7 +105,7 @@ async fn run_collatz_shader(input: &[u8]) -> Result<Vec<u32>, BufferAsyncError> 
         let mut cpass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor { label: None });
         cpass.set_bind_group(0, &bind_group, &[]);
         cpass.set_pipeline(&compute_pipeline);
-        cpass.dispatch(input.len() as u32 / 64, 1, 1);
+        cpass.dispatch_workgroups(input.len() as u32 / 64, 1, 1);
     }
 
     encoder.copy_buffer_to_buffer(
@@ -118,16 +118,15 @@ async fn run_collatz_shader(input: &[u8]) -> Result<Vec<u32>, BufferAsyncError> 
 
     queue.submit(Some(encoder.finish()));
     let buffer_slice = readback_buffer.slice(..);
-    let buffer_future = buffer_slice.map_async(wgpu::MapMode::Read);
+    buffer_slice.map_async(wgpu::MapMode::Read, |r| r.unwrap());
     device.poll(wgpu::Maintain::Wait);
 
-    buffer_future.await.map(|_| {
-        buffer_slice
-            .get_mapped_range()
-            .chunks_exact(4)
-            .map(|b| u32::from_ne_bytes(b.try_into().unwrap()))
-            .collect::<Vec<_>>()
-    })
+    let data = buffer_slice.get_mapped_range();
+    let result = data
+        .chunks_exact(4)
+        .map(|b| u32::from_ne_bytes(b.try_into().unwrap()))
+        .collect::<Vec<_>>();
+    Ok(result)
 }
 
 async fn collatz() {
